@@ -1,0 +1,25 @@
+{
+  "name": "ngh-second-project",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "predev": "node scripts/cleanup-dev-processes.js",
+    "dev": "concurrently \"npm:dev:server\" \"npm:dev:client\"",
+    "dev:client": "vite",
+    "dev:server": "node --watch --env-file-if-exists=.env server.js",
+    "build": "vite build",
+    "preview": "vite preview",
+    "start": "node --env-file-if-exists=.env server.js",
+    "test": "node --test",
+    "hash-password": "node scripts/hash-password.js"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1",
+    "vite": "^7.0.5"
+  },
+  "dependencies": {
+    "express": "^5.1.0",
+    "openai": "^5.10.2"
+  }
+}

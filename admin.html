@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Stats</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="page admin-page">
+    <section class="hero">
+      <div class="hero-top">
+        <p class="eyebrow">Admin Dashboard</p>
+        <a class="admin-link" href="/">학습 화면으로</a>
+      </div>
+      <h1>관리자 전용 단어 통계 화면</h1>
+      <p class="intro">
+        관리자 <strong>나건후</strong>만 로그인해서 조회 통계와 많이 검색된 단어를 확인할 수 있습니다.
+      </p>
+    </section>
+
+    <section id="login-panel" class="panel admin-auth-panel">
+      <p class="label">관리자 로그인</p>
+      <div class="admin-form-grid">
+        <label class="field-label" for="admin-username">아이디</label>
+        <input id="admin-username" class="admin-input" type="text" value="나건후" />
+        <label class="field-label" for="admin-password">비밀번호</label>
+        <input id="admin-password" class="admin-input" type="password" placeholder="관리자 비밀번호" />
+      </div>
+      <div class="actions">
+        <button id="login-button" class="split-button" type="button">로그인</button>
+      </div>
+      <p id="auth-message" class="helper-text">관리자 로그인 후 통계를 확인할 수 있습니다.</p>
+    </section>
+
+    <section id="dashboard-panel" class="result-panel dashboard-panel hidden">
+      <div class="result-header">
+        <div>
+          <p class="result-label">통계 요약</p>
+          <h2 id="dashboard-title">단어 통계를 불러오는 중입니다.</h2>
+        </div>
+        <div class="dashboard-actions">
+          <span id="search-count" class="count-badge">0 searches</span>
+          <button id="export-button" class="ghost-button" type="button">백업 다운로드</button>
+          <button id="reset-stats-button" class="ghost-button danger-button" type="button">통계 초기화</button>
+          <button id="logout-button" class="ghost-button" type="button">로그아웃</button>
+        </div>
+      </div>
+      <p id="dashboard-message" class="helper-text">관리자 통계를 불러오면 이곳에 상태가 표시됩니다.</p>
+
+      <div class="stats-grid">
+        <article class="stat-card">
+          <p class="stat-label">누적 문장 검색 수</p>
+          <p id="total-searches" class="stat-value">0</p>
+        </article>
+        <article class="stat-card">
+          <p class="stat-label">저장된 단어 수</p>
+          <p id="tracked-words" class="stat-value">0</p>
+        </article>
+        <article class="stat-card">
+          <p class="stat-label">마지막 업데이트</p>
+          <p id="updated-at" class="stat-value stat-small">기록 없음</p>
+        </article>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-header">
+          <p class="result-label">많이 검색된 단어</p>
+          <button id="refresh-button" class="ghost-button" type="button">새로고침</button>
+        </div>
+        <canvas id="stats-chart" width="960" height="420"></canvas>
+      </div>
+
+      <div class="table-card">
+        <div class="chart-header">
+          <p class="result-label">상위 단어 목록</p>
+        </div>
+        <ol id="stats-list" class="admin-stats-list">
+          <li class="empty-state">아직 저장된 단어 통계가 없습니다.</li>
+        </ol>
+      </div>
+    </section>
+  </main>
+
+  <script type="module" src="admin.js"></script>
+</body>
+</html>

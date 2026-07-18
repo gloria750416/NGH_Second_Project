@@ -104,11 +104,9 @@ export function createApp({ config, statsStore, security, grammarAnalyzer, wordE
 
     const username = String(request.body?.username ?? "").trim();
     const password = String(request.body?.password ?? "");
+    const adminUser = await security.authenticate(username, password);
 
-    const usernameValid = security.isExpectedUsername(username);
-    const passwordValid = await security.verifyPassword(password);
-
-    if (!usernameValid || !passwordValid) {
+    if (!adminUser) {
       const blockedSeconds = registerFailedLogin(ipAddress);
 
       if (blockedSeconds) {
@@ -124,11 +122,12 @@ export function createApp({ config, statsStore, security, grammarAnalyzer, wordE
 
     clearFailedLogin(ipAddress);
 
-    const session = security.createSession();
+    const session = security.createSession(adminUser);
 
     response.json({
       token: session.token,
-      username: config.adminUsername,
+      username: session.username,
+      displayName: session.displayName,
       expiresAt: new Date(session.expiresAt).toISOString(),
     });
   });
@@ -138,32 +137,46 @@ export function createApp({ config, statsStore, security, grammarAnalyzer, wordE
     response.status(204).end();
   });
 
-  app.get("/api/admin/stats", requireAdminAuth, (_request, response) => {
-    response.json({
-      admin: config.adminUsername,
-      ...statsStore.getSummary(8),
-    });
+  app.get("/api/admin/stats", requireAdminAuth, async (request, response, next) => {
+    try {
+      const limit = Number.parseInt(String(request.query.limit ?? "8"), 10) || 8;
+      const summary = await statsStore.getSummary(limit);
+      response.json({
+        admin: request.adminSession.displayName,
+        ...summary,
+      });
+    } catch (error) {
+      next(error);
+    }
   });
 
-  app.get("/api/admin/export", requireAdminAuth, (_request, response) => {
-    const exportedAt = new Date().toISOString();
-    const payload = {
-      exportedAt,
-      admin: config.adminUsername,
-      stats: statsStore.exportAll(),
-    };
+  app.get("/api/admin/export", requireAdminAuth, async (request, response, next) => {
+    try {
+      const exportedAt = new Date().toISOString();
+      const payload = {
+        exportedAt,
+        admin: request.adminSession.displayName,
+        stats: await statsStore.exportAll(),
+      };
 
-    response.setHeader("Content-Type", "application/json; charset=utf-8");
-    response.setHeader("Content-Disposition", `attachment; filename="word-stats-backup-${exportedAt.slice(0, 10)}.json"`);
-    response.send(JSON.stringify(payload, null, 2));
+      response.setHeader("Content-Type", "application/json; charset=utf-8");
+      response.setHeader("Content-Disposition", `attachment; filename="word-stats-backup-${exportedAt.slice(0, 10)}.json"`);
+      response.send(JSON.stringify(payload, null, 2));
+    } catch (error) {
+      next(error);
+    }
   });
 
-  app.post("/api/admin/reset", requireAdminAuth, (_request, response) => {
-    statsStore.reset();
-    response.status(204).end();
+  app.post("/api/admin/reset", requireAdminAuth, async (_request, response, next) => {
+    try {
+      await statsStore.reset();
+      response.status(204).end();
+    } catch (error) {
+      next(error);
+    }
   });
 
-  app.post("/api/word-lookups", (request, response) => {
+  app.post("/api/word-lookups", async (request, response, next) => {
     const inputWords = Array.isArray(request.body?.words) ? request.body.words : [];
     const words = [...new Set(inputWords.map(statsStore.normalizeWord).filter(Boolean))];
 
@@ -172,12 +185,15 @@ export function createApp({ config, statsStore, security, grammarAnalyzer, wordE
       return;
     }
 
-    statsStore.recordLookup(words);
-
-    response.status(201).json({
-      savedWords: words.length,
-      stats: statsStore.getSummary(5),
-    });
+    try {
+      await statsStore.recordLookup(words);
+      response.status(201).json({
+        savedWords: words.length,
+        stats: await statsStore.getSummary(5),
+      });
+    } catch (error) {
+      next(error);
+    }
   });
 
   app.post("/api/grammar-analysis", async (request, response) => {

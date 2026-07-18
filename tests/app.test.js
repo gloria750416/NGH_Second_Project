@@ -20,7 +20,7 @@ async function startTestServer() {
     loginBlockMs: 1000 * 60,
     maxLoginAttempts: 5,
   };
-  const statsStore = await createStatsStore(dbPath);
+  const statsStore = await createStatsStore({ databasePath: dbPath });
   const security = createSecurity(config);
   const grammarAnalyzer = {
     isEnabled() {
@@ -30,7 +30,7 @@ async function startTestServer() {
       return {
         overview: `${text} 지문의 핵심 내용을 학습용으로 정리했습니다.`,
         translation: "날씨가 추웠지만 우리는 여행을 계속했고, 결국 작은 마을에 도착했다는 내용입니다.",
-        meaning: "어려움이 있어도 계획을 계속 밀고 나간 상황을 보여주는 지문입니다.",
+        meaning: "어려운 상황에서도 계획을 계속 밀고 나간 흐름을 보여주는 지문입니다.",
         sentenceBreakdown: [
           {
             sentence: "Although the weather was cold, we decided to continue our journey.",
@@ -38,7 +38,7 @@ async function startTestServer() {
           },
           {
             sentence: "We finally arrived at a small village before sunset.",
-            translation: "우리는 해 지기 전에 마침내 작은 마을에 도착했다.",
+            translation: "우리는 해 지기 전에 작은 마을에 도착했다.",
           },
         ],
         sentenceType: "복문",
@@ -49,11 +49,11 @@ async function startTestServer() {
         objectOrComplement: "to continue our journey",
         modifiers: ["Although the weather was cold"],
         connector: "although",
-        clauseDetail: "'Although the weather was cold'가 양보절이고, 뒤의 'we decided to continue our journey'가 주절입니다.",
+        clauseDetail: "'Although the weather was cold'가 양보절이고 그 뒤의 'we decided to continue our journey'가 주절입니다.",
         patternDetail: "'we decided to continue our journey'는 S + V + to부정사 구조로 볼 수 있습니다.",
-        structureNote: "'Although the weather was cold'라는 양보절이 먼저 나오고, 그 뒤에 주절이 이어지는 구조입니다.",
+        structureNote: "'Although the weather was cold'라는 양보절이 먼저 오고 그 뒤에 주절이 이어지는 구조입니다.",
         learningTips: [
-          "'Although the weather was cold'처럼 although 뒤에는 절이 와서 양보 의미를 만듭니다.",
+          "'Although the weather was cold'처럼 although 뒤에서는 앞 내용과 대비되는 양보절을 만듭니다.",
           "'decided to continue'처럼 decide 뒤에는 to부정사가 자주 옵니다.",
         ],
       };
@@ -70,7 +70,7 @@ async function startTestServer() {
           normalized: "although the weather was cold",
           partOfSpeechKo: "양보절",
           meaningKo: "날씨가 추웠지만",
-          noteKo: "'Although the weather was cold' 전체가 양보 의미를 만드는 절입니다.",
+          noteKo: "'Although the weather was cold' 전체가 양보 의미를 만드는 덩어리입니다.",
           statsWords: ["weather", "cold"],
         },
         {
@@ -144,8 +144,8 @@ test("stats store ignores function words in tracked vocabulary", async () => {
   const fixture = await startTestServer();
 
   try {
-    fixture.statsStore.recordLookup(["the", "a", "although", "weather", "decide"]);
-    const summary = fixture.statsStore.getSummary(10);
+    await fixture.statsStore.recordLookup(["the", "a", "although", "weather", "decide"]);
+    const summary = await fixture.statsStore.getSummary(10);
 
     assert.equal(summary.trackedWords, 2);
     assert.deepEqual(summary.words.map((item) => item.word), ["decide", "weather"]);
